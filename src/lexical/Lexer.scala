@@ -26,6 +26,14 @@ class Lexer(filename: String) {
 		(new SeparateTokenBuilder, "separator")
 	)
 
+	def skipComments(): Boolean = {
+		if (reader.lastChar == '/' && reader.buf.head == '/') {
+			while (reader.hasNext && reader.next() != '\n') {}
+			return true
+		}
+		false
+	}
+
 	def next(): Option[Token[_]] = {
 		skipWhitespacesAndNewlines()
 		reader.hasNext match {
@@ -36,6 +44,9 @@ class Lexer(filename: String) {
 				)
 				while (reader.hasNext && tokenBuilder.isValidNextCharacter(reader.buf.head)) {
 					tokenBuilder.append(reader.next())
+					if (skipComments()) {
+						return next()
+					}
 				}
 				Some(tokenBuilder.build(reader.line, reader.position - tokenBuilder.builder.length))
 		}
@@ -52,13 +63,15 @@ class Reader(filename: String) {
 	var position = 0
 
 	val buf = scala.io.Source.fromFile(filename).buffered
+	var lastChar = buf.head
 
 	def next(): Char = {
 		buf.head match {
 			case '\n' => line += 1
 			case char => position += 1
 		}
-		buf.next()
+		lastChar = buf.next()
+		lastChar
 	}
 
 	def hasNext: Boolean = buf.hasNext
