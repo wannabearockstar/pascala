@@ -11,8 +11,9 @@ import scala.language.existentials
 /**
 	* Created by wannabe on 29.12.15.
 	*/
-class Lexer(sourceIterator: BufferedIterator[Char]) {
+class Lexer(sourceIterator: BufferedIterator[Char]) extends Iterator[Option[Token[_]]] {
 
+	var cachedNext: Option[Token[_]] = None
 	val reader: Reader = new Reader(sourceIterator)
 	var currentToken = null
 	val rules = List(
@@ -34,7 +35,12 @@ class Lexer(sourceIterator: BufferedIterator[Char]) {
 		false
 	}
 
-	def next(): Option[Token[_]] = {
+	override def next(): Option[Token[_]] = {
+		if (cachedNext.isDefined) {
+			val extractedNext = cachedNext
+			cachedNext = None
+			return extractedNext
+		}
 		skipWhitespacesAndNewlines()
 		reader.hasNext match {
 			case false => None
@@ -54,6 +60,14 @@ class Lexer(sourceIterator: BufferedIterator[Char]) {
 
 	def skipWhitespacesAndNewlines() = {
 		while (reader.hasNext && (reader.buf.head.isWhitespace || (reader.buf.head equals '\n'))) reader.next()
+	}
+
+	override def hasNext: Boolean = {
+		if (cachedNext.isDefined) {
+			return true
+		}
+		cachedNext = next()
+		cachedNext.isDefined
 	}
 }
 
