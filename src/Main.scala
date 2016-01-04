@@ -5,7 +5,9 @@ import lexical.Lexer
 	*/
 object Main {
 	def main (args: Array[String]) {
-		val lexer: Lexer = new Lexer("file.txt")
-		Iterator.continually(lexer.next()).takeWhile(_.isDefined).foreach(i => println(i.get.value + ": " + i.get.getClass.toString + " " + i.get.line + "_" + i.get.position))
+		val lexer: Lexer = new Lexer(scala.io.Source.fromFile("file.txt").buffered)
+		Iterator.continually(lexer.next())
+			.takeWhile(_.isDefined)
+			.foreach(i => println(i.get.value + ": " + i.get.getClass.toString + " " + i.get.line + "_" + i.get.position))
 	}
 }

@@ -11,9 +11,9 @@ import scala.language.existentials
 /**
 	* Created by wannabe on 29.12.15.
 	*/
-class Lexer(filename: String) {
+class Lexer(sourceIterator: BufferedIterator[Char]) {
 
-	val reader: Reader = new Reader(filename)
+	val reader: Reader = new Reader(sourceIterator)
 	var currentToken = null
 	val rules = List(
 		(new ReservedTokenBuilder, "reserved"),
@@ -57,12 +57,10 @@ class Lexer(filename: String) {
 	}
 }
 
-class Reader(filename: String) {
+class Reader(val buf: BufferedIterator[Char]) {
 
 	var line = 0
 	var position = 0
-
-	val buf = scala.io.Source.fromFile(filename).buffered
 	var lastChar = buf.head
 
 	def next(): Char = {
