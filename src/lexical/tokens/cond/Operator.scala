@@ -29,6 +29,7 @@ object Operator {
 	case object EQUALS extends Operator
 
 	case object GREATER extends Operator
+
 	case object LESS extends Operator
 
 }

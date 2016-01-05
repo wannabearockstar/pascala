@@ -1,6 +1,5 @@
 package lexical
 
-import lexical.builders.TokenBuilderFactory
 import lexical.builders.cond.OperatorTokenBuilder
 import lexical.builders.const.{DoubleTokenBuilder, IntTokenBuilder, StringTokenBuilder}
 import lexical.builders.keywords.{ReservedTokenBuilder, SeparateTokenBuilder, IdentifierTokenBuilder, PrimaryTypeTokenBuilder}
@@ -17,14 +16,14 @@ class Lexer(sourceIterator: BufferedIterator[Char]) extends Iterator[Option[Toke
 	val reader: Reader = new Reader(sourceIterator)
 	var currentToken = null
 	val rules = List(
-		(new ReservedTokenBuilder, "reserved"),
-		(new PrimaryTypeTokenBuilder, "primary_type"),
-		(new OperatorTokenBuilder, "operator"),
-		(new DoubleTokenBuilder, "const:double"),
-		(new IntTokenBuilder, "const:int"),
-		(new StringTokenBuilder, "const:string"),
-		(new IdentifierTokenBuilder, "identifier"),
-		(new SeparateTokenBuilder, "separator")
+		new ReservedTokenBuilder,
+		new PrimaryTypeTokenBuilder,
+		new OperatorTokenBuilder,
+		new DoubleTokenBuilder,
+		new IntTokenBuilder,
+		new StringTokenBuilder,
+		new IdentifierTokenBuilder,
+		new SeparateTokenBuilder
 	)
 
 	def skipComments(): Boolean = {
@@ -45,9 +44,8 @@ class Lexer(sourceIterator: BufferedIterator[Char]) extends Iterator[Option[Toke
 		reader.hasNext match {
 			case false => None
 			case true =>
-				val tokenBuilder = TokenBuilderFactory(
-					rules.toStream.find(_._1.isValidNextCharacter(reader.buf.head)).get._2
-				)
+				val tokenBuilder = rules.toStream.find(_.isValidNextCharacter(reader.buf.head)).get
+					.getClass.newInstance()
 				while (reader.hasNext && tokenBuilder.isValidNextCharacter(reader.buf.head)) {
 					tokenBuilder.append(reader.next())
 					if (skipComments()) {

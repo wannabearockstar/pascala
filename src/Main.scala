@@ -1,5 +1,4 @@
 import lexical.Lexer
-import lexical.tokens.Token
 
 /**
 	* Created by wannabe on 29.12.15.
