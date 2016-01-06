@@ -7,6 +7,6 @@ import parser.Parser
 object Main {
 	def main (args: Array[String]) {
 		val lexer: Lexer = new Lexer(scala.io.Source.fromFile("file.txt").buffered)
-		Parser.parse(lexer)
+		print(Parser.parse(lexer).asHorizontalString())
 	}
 }
