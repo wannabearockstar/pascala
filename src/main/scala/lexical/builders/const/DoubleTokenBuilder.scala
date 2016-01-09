@@ -11,7 +11,7 @@ class DoubleTokenBuilder extends TokenBuilder {
 
 	val pattern = "(\\d+\\.\\d+)".r
 
-	override def isValidNextCharacter(c: Char): Boolean = c.isDigit || (builder.nonEmpty && c == '.')
+	override def isAccept(c: Char): Boolean = c.isDigit || (builder.nonEmpty && c == '.')
 
 	override def build(line: Int, position: Int): Token[_] = builder.mkString match {
 		case pattern(c) => new DoubleToken(line, position, c)

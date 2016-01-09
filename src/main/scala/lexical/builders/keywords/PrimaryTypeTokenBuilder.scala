@@ -14,5 +14,5 @@ class PrimaryTypeTokenBuilder extends TokenBuilder {
 		case None => new IdentifierToken(line, position, builder.mkString)
 	}
 
-	override def isValidNextCharacter(c: Char): Boolean = c.isLetter || (c equals '_')
+	override def isAccept(c: Char): Boolean = c.isLetter || (c equals '_')
 }

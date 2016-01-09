@@ -11,7 +11,7 @@ class StringTokenBuilder extends TokenBuilder {
 
 	override def build(line: Int, position: Int): Token[_] = new StringToken(line, position, builder.mkString)
 
-	override def isValidNextCharacter(c: Char): Boolean = {
+	override def isAccept(c: Char): Boolean = {
 		builder.isEmpty match {
 			case true => c equals '\''
 			case false => builder.length match {

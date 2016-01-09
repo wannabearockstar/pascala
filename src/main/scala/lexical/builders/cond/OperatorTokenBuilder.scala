@@ -11,5 +11,5 @@ class OperatorTokenBuilder extends TokenBuilder{
 
 	override def build(line: Int, position: Int): Token[_] = new OperatorToken(line, position, builder.mkString)
 
-	override def isValidNextCharacter(c: Char): Boolean = builder.isEmpty && Operator.fromString(c.toString).isDefined
+	override def isAccept(c: Char): Boolean = builder.isEmpty && Operator.fromString(c.toString).isDefined
 }

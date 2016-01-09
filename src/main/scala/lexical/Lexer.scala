@@ -44,9 +44,9 @@ class Lexer(sourceIterator: BufferedIterator[Char]) extends BufferedIterator[Opt
 		reader.hasNext match {
 			case false => None
 			case true =>
-				val tokenBuilder = rules.toStream.find(_.isValidNextCharacter(reader.buf.head)).get
+				val tokenBuilder = rules.toStream.find(_.isAccept(reader.buf.head)).get
 					.getClass.newInstance()
-				while (reader.hasNext && tokenBuilder.isValidNextCharacter(reader.buf.head)) {
+				while (reader.hasNext && tokenBuilder.isAccept(reader.buf.head)) {
 					tokenBuilder.append(reader.next())
 					if (skipComments()) {
 						return next()

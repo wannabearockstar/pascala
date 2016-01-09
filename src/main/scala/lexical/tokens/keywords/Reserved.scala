@@ -9,6 +9,7 @@ object Reserved {
 		case "begin" => Some(BEGIN)
 		case "case" => Some(CASE)
 		case "const" => Some(CONST)
+		case "do" => Some(DO)
 		case "else" => Some(ELSE)
 		case "end" => Some(END)
 		case "for" => Some(FOR)
@@ -32,6 +33,8 @@ object Reserved {
 	case object CASE extends Reserved
 
 	case object CONST extends Reserved
+
+	case object DO extends Reserved
 
 	case object ELSE extends Reserved
 

@@ -11,5 +11,5 @@ class IdentifierTokenBuilder extends TokenBuilder{
 
 	override def build(line: Int, position: Int): Token[_] = new IdentifierToken(line, position, builder.mkString)
 
-	override def isValidNextCharacter(c: Char): Boolean = c.isLetterOrDigit || (c equals '_')
+	override def isAccept(c: Char): Boolean = c.isLetterOrDigit || (c equals '_')
 }

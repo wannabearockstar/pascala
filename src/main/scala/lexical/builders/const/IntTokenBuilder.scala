@@ -10,7 +10,7 @@ import lexical.tokens.const.IntToken
 	*/
 class IntTokenBuilder extends TokenBuilder {
 
-	override def isValidNextCharacter(c: Char): Boolean = builder.isEmpty match {
+	override def isAccept(c: Char): Boolean = builder.isEmpty match {
 		case true => c.isDigit || (c equals '-')
 		case false => c.isDigit
 	}

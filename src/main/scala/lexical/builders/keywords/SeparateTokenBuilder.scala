@@ -13,5 +13,5 @@ class SeparateTokenBuilder extends TokenBuilder {
 		case Some(token) => new SeparateToken(line, position, builder.mkString)
 	}
 
-	override def isValidNextCharacter(c: Char): Boolean = builder.isEmpty && Separate.fromString(c.toString).isDefined
+	override def isAccept(c: Char): Boolean = builder.isEmpty && Separate.fromString(c.toString).isDefined
 }

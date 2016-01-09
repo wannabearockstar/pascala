@@ -17,5 +17,5 @@ class ReservedTokenBuilder extends TokenBuilder {
 		}
 	}
 
-	override def isValidNextCharacter(c: Char): Boolean = c.isLetter || (c equals '_')
+	override def isAccept(c: Char): Boolean = c.isLetter || (c equals '_')
 }

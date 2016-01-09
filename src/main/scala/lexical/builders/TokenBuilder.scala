@@ -11,9 +11,9 @@ abstract class TokenBuilder {
 
 	def build(line: Int, position: Int): Token[_]
 
-	def isValidNextCharacter(c: Char): Boolean
+	def isAccept(c: Char): Boolean
 
-	def append(c: Char) = isValidNextCharacter(c) match {
+	def append(c: Char) = isAccept(c) match {
 		case false => throw new IllegalArgumentException()
 		case true => builder.append(c.toString)
 	}
