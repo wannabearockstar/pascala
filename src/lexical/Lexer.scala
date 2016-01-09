@@ -10,7 +10,7 @@ import scala.language.existentials
 /**
 	* Created by wannabe on 29.12.15.
 	*/
-class Lexer(sourceIterator: BufferedIterator[Char]) extends Iterator[Option[Token[_]]] {
+class Lexer(sourceIterator: BufferedIterator[Char]) extends BufferedIterator[Option[Token[_]]] {
 
 	var cachedNext: Option[Token[_]] = None
 	val reader: Reader = new Reader(sourceIterator)
@@ -66,6 +66,14 @@ class Lexer(sourceIterator: BufferedIterator[Char]) extends Iterator[Option[Toke
 		}
 		cachedNext = next()
 		cachedNext.isDefined
+	}
+
+	override def head: Option[Token[_]] = {
+		if (cachedNext.isDefined) {
+			return cachedNext
+		}
+		cachedNext = next()
+		cachedNext
 	}
 }
 

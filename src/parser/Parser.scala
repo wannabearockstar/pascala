@@ -1,45 +1,84 @@
 package parser
 
 import lexical.tokens.Token
+import lexical.tokens.cond.Operator._
 import lexical.tokens.cond.OperatorToken
-import lexical.tokens.const.{StringToken, IntToken, DoubleToken}
-import lexical.tokens.keywords.Separate.{RIGHT_PARENTHESIS, LEFT_PARENTHESIS}
-import lexical.tokens.keywords.{IdentifierToken, SeparateToken}
-import parser.rules.{OperatorRule, OperandRule, RightParenthesisRule, LeftParenthesisRule}
 import parser.utils.Tree
-
-import scala.collection.mutable
-import scala.collection.mutable.Stack
 
 /**
 	* Created by wannabe on 05.01.16.
 	*/
+sealed trait NonTerminal {
+
+	def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]]
+}
+
+case object Expression extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(None, None, None)
+		tree.l = Some(SimpleExpression.evaluate(tokens))
+		if (tokens.hasNext) {
+			return tokens.head.get match {
+				case operator: OperatorToken => operator.value match {
+					case EQUALS | GREATER | LESS =>
+						tree.v = tokens.next()
+						tree.r = Some(Expression.evaluate(tokens))
+						tree
+					case _ => tree.l.get
+				}
+				case _ => tree.l.get
+			}
+		}
+		tree.l.get
+	}
+}
+
+case object SimpleExpression extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(None, None, None)
+		tree.l = Some(Term.evaluate(tokens))
+		if (tokens.hasNext) {
+			tokens.head.get match {
+				case operator: OperatorToken => operator.value match {
+					case PLUS | MINUS =>
+						tree.v = tokens.next()
+						tree.r = Some(SimpleExpression.evaluate(tokens))
+						return tree
+					case _ => return tree.l.get
+				}
+			}
+		}
+		tree.l.get
+	}
+}
+
+case object Term extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(None, None, None)
+		if (tokens.hasNext) {
+			tree.l = Some(new Tree(tokens.next(), None, None))
+			if (tokens.hasNext) {
+				tokens.head.get match {
+					case operator: OperatorToken => operator.value match {
+						case MULTIPLY | DIVIDE =>
+							tree.v = tokens.next()
+							tree.r = Some(Term.evaluate(tokens))
+							return tree
+						case _ => return tree.l.get
+					}
+				}
+			}
+		}
+		tree.l.get
+	}
+}
+
 object Parser {
 
-	def resolveHandler(token: Option[Token[_]]) = token.get match {
-		case separate: SeparateToken => separate.value match {
-			case LEFT_PARENTHESIS => new LeftParenthesisRule
-			case RIGHT_PARENTHESIS => new RightParenthesisRule
-			case _ => throw new IllegalArgumentException
-		}
-		case operator: OperatorToken => new OperatorRule
-		case operand: IdentifierToken => new OperandRule
-		case const: DoubleToken => new OperandRule
-		case const: IntToken => new OperandRule
-		case const: StringToken => new OperandRule
-		case _ => throw new IllegalArgumentException
-
+	def parse(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		Expression.evaluate(tokens)
 	}
-
-	def parse(tokens: Iterator[Option[Token[_]]]): Tree[Token[_]] = {
-		var tree: Tree[Token[_]] = new Tree(None, None, None)
-		val head = tree
-		val stack = new mutable.Stack[Tree[Token[_]]]
-		tokens foreach {
-			token => tree = resolveHandler(token).apply(tree, token, stack)
-		}
-		head
-	}
-
-
 }
