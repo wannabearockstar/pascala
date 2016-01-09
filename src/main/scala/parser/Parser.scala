@@ -40,13 +40,13 @@ case object SimpleExpression extends NonTerminal {
 		val tree: Tree[Token[_]] = new Tree(None, None, None)
 		tree.l = Some(Term.evaluate(tokens))
 		if (tokens.hasNext) {
-			tokens.head.get match {
+			return tokens.head.get match {
 				case operator: OperatorToken => operator.value match {
 					case PLUS | MINUS =>
 						tree.v = tokens.next()
 						tree.r = Some(SimpleExpression.evaluate(tokens))
-						return tree
-					case _ => return tree.l.get
+						tree
+					case _ => tree.l.get
 				}
 			}
 		}
@@ -61,13 +61,13 @@ case object Term extends NonTerminal {
 		if (tokens.hasNext) {
 			tree.l = Some(new Tree(tokens.next(), None, None))
 			if (tokens.hasNext) {
-				tokens.head.get match {
+				return tokens.head.get match {
 					case operator: OperatorToken => operator.value match {
 						case MULTIPLY | DIVIDE =>
 							tree.v = tokens.next()
 							tree.r = Some(Term.evaluate(tokens))
-							return tree
-						case _ => return tree.l.get
+							tree
+						case _ => tree.l.get
 					}
 				}
 			}
