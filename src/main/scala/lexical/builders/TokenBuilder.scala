@@ -17,4 +17,6 @@ abstract class TokenBuilder {
 		case false => throw new IllegalArgumentException()
 		case true => builder.append(c.toString)
 	}
+
+	def flush() = builder.clear()
 }
