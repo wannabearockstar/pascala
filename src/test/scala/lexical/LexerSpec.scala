@@ -1,7 +1,6 @@
 package lexical
 
-import lexical.tokens.cond.Operator.{Operator, EQUALS}
-import lexical.tokens.const.IntToken
+import lexical.tokens.cond.Operator.{EQUALS, Operator}
 import lexical.tokens.keywords.PrimaryType.{INTEGER, PrimaryType}
 import lexical.tokens.keywords.Reserved._
 import lexical.tokens.keywords.Separate._
@@ -43,5 +42,20 @@ class LexerSpec extends FlatSpec with Matchers {
 		lexer.next().get.value should (be (an[Reserved]) and equal (DO))
 		lexer.next().get.value should (be (an[Reserved]) and equal (END))
 		lexer.next().get.value should (be (an[Separate]) and equal (DOT))
+	}
+
+	it should "skip comments and newslines" in {
+		val tokensWithComments = "Program test; //asd \n\n var a: Integer;"
+		val lexer = new Lexer(tokensWithComments.iterator.buffered)
+
+		lexer.next().get.value should (be(an[Reserved]) and equal(PROGRAM))
+		lexer.next().get shouldBe a[IdentifierToken]
+		lexer.next().get.value should (be(an[Separate]) and equal(SEMICOLON))
+
+		lexer.next().get.value should (be(an[Reserved]) and equal(VAR))
+		lexer.next().get shouldBe a[IdentifierToken]
+		lexer.next().get.value should (be(an[Separate]) and equal(COLON))
+		lexer.next().get.value should (be(an[PrimaryType]) and equal(INTEGER))
+		lexer.next().get.value should (be(an[Separate]) and equal(SEMICOLON))
 	}
 }
