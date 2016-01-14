@@ -13,66 +13,80 @@ sealed trait NonTerminal {
 	def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]]
 }
 
+//case object Program extends NonTerminal {
+//
+//	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+//		val tree: Tree[Token[_]] = new Tree(None, None, None)
+//		//todo check if program starts with PROGRAM %program_name%; begin %% end
+////		tokens.next()
+////		tokens.next()
+////		tokens.next()
+////		tokens.next()
+//		//todo
+//	}
+//}
+
 case object Expression extends NonTerminal {
 
 	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
-		val tree: Tree[Token[_]] = new Tree(None, None, None)
-		tree.l = Some(SimpleExpression.evaluate(tokens))
+		val tree: Tree[Token[_]] = new Tree(Expression)
+		val operand = SimpleExpression.evaluate(tokens)
+		tree.children = tree.children :+ operand
 		if (tokens.hasNext) {
 			return tokens.head.get match {
 				case operator: OperatorToken => operator.value match {
 					case EQUALS | GREATER | LESS =>
-						tree.v = tokens.next()
-						tree.r = Some(Expression.evaluate(tokens))
+						tree.children = tree.children :+ new Tree[Token[_]](Expression, List.empty, tokens.next())
+						tree.children = tree.children :+ SimpleExpression.evaluate(tokens)
 						tree
-					case _ => tree.l.get
+					case _ => operand
 				}
-				case _ => tree.l.get
+				case _ => operand
 			}
 		}
-		tree.l.get
+		operand
 	}
 }
 
 case object SimpleExpression extends NonTerminal {
 
 	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
-		val tree: Tree[Token[_]] = new Tree(None, None, None)
-		tree.l = Some(Term.evaluate(tokens))
+		val tree: Tree[Token[_]] = new Tree(SimpleExpression)
+		val operand = Term.evaluate(tokens)
+		tree.children = tree.children :+ operand
 		if (tokens.hasNext) {
 			return tokens.head.get match {
 				case operator: OperatorToken => operator.value match {
 					case PLUS | MINUS =>
-						tree.v = tokens.next()
-						tree.r = Some(SimpleExpression.evaluate(tokens))
+						tree.children = tree.children :+ new Tree[Token[_]](SimpleExpression, List.empty, tokens.next())
+						tree.children = tree.children :+ SimpleExpression.evaluate(tokens)
 						tree
-					case _ => tree.l.get
+					case _ => operand
 				}
 			}
 		}
-		tree.l.get
+		operand
 	}
 }
 
 case object Term extends NonTerminal {
 
 	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
-		val tree: Tree[Token[_]] = new Tree(None, None, None)
-		if (tokens.hasNext) {
-			tree.l = Some(new Tree(tokens.next(), None, None))
+		val tree: Tree[Token[_]] = new Tree(Term)
+		val operand = new Tree(Term, List.empty, tokens.next())
+		tree.children = tree.children :+ operand
 			if (tokens.hasNext) {
 				return tokens.head.get match {
 					case operator: OperatorToken => operator.value match {
 						case MULTIPLY | DIVIDE =>
-							tree.v = tokens.next()
-							tree.r = Some(Term.evaluate(tokens))
+							tree.children = tree.children :+ new Tree[Token[_]](Term, List.empty, tokens.next())
+							tree.children = tree.children :+ Term.evaluate(tokens)
 							tree
-						case _ => tree.l.get
+						case _ => operand
 					}
 				}
 			}
-		}
-		tree.l.get
+		operand
 	}
 }
 
