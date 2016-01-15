@@ -37,7 +37,7 @@ case object Expression extends NonTerminal {
 				case operator: OperatorToken => operator.value match {
 					case EQUALS | GREATER | LESS =>
 						tree.children = tree.children :+ new Tree[Token[_]](Expression, List.empty, tokens.next())
-						tree.children = tree.children :+ SimpleExpression.evaluate(tokens)
+						tree.children = tree.children :+ Expression.evaluate(tokens)
 						tree
 					case _ => operand
 				}
