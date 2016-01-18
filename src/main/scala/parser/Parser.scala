@@ -3,10 +3,10 @@ package parser
 import lexical.tokens.Token
 import lexical.tokens.cond.Operator._
 import lexical.tokens.cond.OperatorToken
-import lexical.tokens.const.{DoubleToken, IntToken, StringToken}
 import lexical.tokens.keywords.Reserved._
 import lexical.tokens.keywords.Separate._
 import lexical.tokens.keywords.{IdentifierToken, ReservedToken, SeparateToken, TypeToken}
+import lexical.tokens.utils.Argument
 import parser.utils.Tree
 
 /**
@@ -82,10 +82,7 @@ case object FunctionCall extends NonTerminal {
 
 		while (tokens.hasNext && !tokens.head.get.value.equals(RIGHT_PARENTHESIS)) {
 			tokens.head.get match {
-				case identToken: IdentifierToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
-				case identToken: IntToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
-				case identToken: DoubleToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
-				case identToken: StringToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
+				case argument: Argument => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
 				case separateToken: SeparateToken => separateToken.value match {
 					case COMMA => tokens.next()
 					case _ => throw new IllegalArgumentException
