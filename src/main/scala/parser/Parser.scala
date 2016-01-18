@@ -4,7 +4,7 @@ import lexical.tokens.Token
 import lexical.tokens.cond.Operator._
 import lexical.tokens.cond.OperatorToken
 import lexical.tokens.keywords.Reserved._
-import lexical.tokens.keywords.Separate.{COLON, COMMA, SEMICOLON}
+import lexical.tokens.keywords.Separate._
 import lexical.tokens.keywords.{IdentifierToken, ReservedToken, SeparateToken, TypeToken}
 import parser.utils.Tree
 
@@ -23,18 +23,30 @@ case object Program extends NonTerminal {
 		if (!tokens.next().get.value.equals(PROGRAM)) {
 			throw new IllegalArgumentException
 		}
-		val programName = tokens.next().get.value.toString
+		val programName = tokens.next()
 		if (!tokens.next().get.value.equals(SEMICOLON)) {
 			throw new IllegalArgumentException
 		}
+		tree.children = tree.children :+ new Tree[Token[_]](Term, List.empty, programName)
+		tree.children = tree.children :+ ProgramBody.evaluate(tokens)
+		tree
+	}
+}
 
+case object ProgramBody extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(ProgramBody)
 		while (tokens.hasNext) {
 			tokens.next().get match {
 				case reservedToken: ReservedToken => reservedToken.value match {
 					case CONST => tree.children = tree.children :+ Const.evaluate(tokens)
 					case VAR => tree.children = tree.children :+ Var.evaluate(tokens)
 					case BEGIN => tree.children = tree.children :+ CompoundStatement.evaluate(tokens)
-					case END => return tree
+					case FUNCTION => tree.children = tree.children :+ Function.evaluate(tokens)
+					case END =>
+						tokens.next()
+						return tree
 				}
 			}
 		}
@@ -173,6 +185,47 @@ case object Condition extends NonTerminal {
 				}
 				case _ => throw new IllegalArgumentException
 			}
+		}
+		tree
+	}
+}
+
+case object Function extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(Function)
+		tree.children = tree.children :+ FunctionSignature.evaluate(tokens)
+		tree.children = tree.children :+ ProgramBody.evaluate(tokens)
+		tree
+	}
+}
+
+case object FunctionSignature extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(FunctionSignature)
+		tree.children = tree.children :+ new Tree[Token[_]](Term, List.empty, tokens.next()) //func name
+		tokens.head.get match {
+			case sepToken: SeparateToken => sepToken.value match {
+				case LEFT_PARENTHESIS =>
+					tokens.next()
+					tree.children = tree.children :+ Var.evaluate(tokens) //args
+				case _ => throw new IllegalArgumentException
+			}
+			case _ => throw new IllegalArgumentException
+		}
+		if (!tokens.next().get.value.equals(RIGHT_PARENTHESIS)) {
+			throw new IllegalArgumentException
+		}
+		if (!tokens.next().get.value.equals(COLON)) {
+			throw new IllegalArgumentException
+		}
+		tokens.head.get match {
+			case typeToken: TypeToken => tree.children = tree.children :+ new Tree[Token[_]](Term, List.empty, tokens.next()) //return type
+			case _ => throw new IllegalArgumentException
+		}
+		if (!tokens.next().get.value.equals(SEMICOLON)) {
+			throw new IllegalArgumentException
 		}
 		tree
 	}
