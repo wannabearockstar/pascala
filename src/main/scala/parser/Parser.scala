@@ -3,6 +3,7 @@ package parser
 import lexical.tokens.Token
 import lexical.tokens.cond.Operator._
 import lexical.tokens.cond.OperatorToken
+import lexical.tokens.const.{DoubleToken, IntToken, StringToken}
 import lexical.tokens.keywords.Reserved._
 import lexical.tokens.keywords.Separate._
 import lexical.tokens.keywords.{IdentifierToken, ReservedToken, SeparateToken, TypeToken}
@@ -50,6 +51,52 @@ case object ProgramBody extends NonTerminal {
 				}
 			}
 		}
+		tree
+	}
+}
+
+case object FunctionCallOrIdentifier extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val identifier = tokens.next()
+		val reloadIterator = (Iterator.single(identifier) ++ tokens).buffered
+		tokens.head.get match {
+			case sepToken: SeparateToken => sepToken.value match {
+				case LEFT_PARENTHESIS => FunctionCall.evaluate(reloadIterator)
+				case _ => new Tree(Term, List.empty, identifier)
+			}
+			case _ => new Tree(Term, List.empty, identifier)
+		}
+	}
+}
+
+case object FunctionCall extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(FunctionCall)
+		tree.children = tree.children :+ new Tree(Term, List.empty, tokens.next()) //func name
+
+		if (!tokens.next().get.value.equals(LEFT_PARENTHESIS)) {
+			throw new IllegalArgumentException
+		}
+
+		while (tokens.hasNext && !tokens.head.get.value.equals(RIGHT_PARENTHESIS)) {
+			tokens.head.get match {
+				case identToken: IdentifierToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
+				case identToken: IntToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
+				case identToken: DoubleToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
+				case identToken: StringToken => tree.children = tree.children :+ SimpleExpression.evaluate(tokens) //args
+				case separateToken: SeparateToken => separateToken.value match {
+					case COMMA => tokens.next()
+					case _ => throw new IllegalArgumentException
+				}
+				case _ => throw new IllegalArgumentException
+			}
+		}
+		if (!tokens.hasNext) {
+			throw new IllegalArgumentException
+		}
+		tokens.next() //left parenthesis
 		tree
 	}
 }
@@ -257,14 +304,14 @@ case object Term extends NonTerminal {
 
 	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
 		val tree: Tree[Token[_]] = new Tree(Term)
-		val operand = new Tree(Term, List.empty, tokens.next())
+		val operand = FunctionCallOrIdentifier.evaluate(tokens)
 		tree.children = tree.children :+ operand
 		if (tokens.hasNext) {
 			return tokens.head.get match {
 				case operator: OperatorToken => operator.value match {
 					case MULTIPLY | DIVIDE =>
 						tree.children = tree.children :+ new Tree[Token[_]](Term, List.empty, tokens.next())
-						tree.children = tree.children :+ Term.evaluate(tokens)
+						tree.children = tree.children :+ FunctionCallOrIdentifier.evaluate(tokens)
 						tree
 					case _ => operand
 				}
