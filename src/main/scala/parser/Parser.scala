@@ -33,7 +33,7 @@ case object Program extends NonTerminal {
 				case reservedToken: ReservedToken => reservedToken.value match {
 					case CONST => tree.children = tree.children :+ Const.evaluate(tokens)
 					case VAR => tree.children = tree.children :+ Var.evaluate(tokens)
-					case BEGIN => tree.children = tree.children :+ Expression.evaluate(tokens)
+					case BEGIN => tree.children = tree.children :+ CompoundStatement.evaluate(tokens)
 					case END => return tree
 				}
 			}
@@ -120,6 +120,61 @@ case object Expression extends NonTerminal {
 			}
 		}
 		operand
+	}
+}
+
+case object CompoundStatement extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(CompoundStatement)
+		if (tokens.hasNext) {
+			return tokens.head.get match {
+				case reserved: ReservedToken => reserved.value match {
+					case IF =>
+						tokens.next()
+						tree.children = tree.children :+ Condition.evaluate(tokens)
+						tree.children = tree.children ::: CompoundStatement.evaluate(tokens).children
+						tree
+					case ELSE => tree
+					case END => tree
+					case _ => throw new IllegalArgumentException
+				}
+				case ident: IdentifierToken =>
+					tree.children = tree.children :+ Expression.evaluate(tokens)
+					tree.children = tree.children ::: CompoundStatement.evaluate(tokens).children
+					tree
+				case _ => throw new IllegalAccessException
+			}
+		}
+		tree
+	}
+}
+
+case object Condition extends NonTerminal {
+
+	override def evaluate(tokens: BufferedIterator[Option[Token[_]]]): Tree[Token[_]] = {
+		val tree: Tree[Token[_]] = new Tree(Condition)
+		tree.children = tree.children :+ Expression.evaluate(tokens)
+		if (tokens.hasNext) {
+			return tokens.head.get match {
+				case reservedToken: ReservedToken => reservedToken.value match {
+					case THEN | ELSE =>
+						tokens.next()
+						tree.children = tree.children :+ CompoundStatement.evaluate(tokens)
+						tree.children = tree.children ::: Expression.evaluate(tokens).children
+						tree
+					case _ => throw new IllegalArgumentException
+				}
+				case separateToken: SeparateToken => separateToken.value match {
+					case SEMICOLON =>
+						tokens.next()
+						tree
+					case _ => throw new IllegalArgumentException
+				}
+				case _ => throw new IllegalArgumentException
+			}
+		}
+		tree
 	}
 }
 
